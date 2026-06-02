@@ -10,7 +10,7 @@ const userSchema = new Schema({
         unique : true
     },
     email : {
-        type : email,
+        type : String,
         required : true,
         lowercase: true,
         trim : true,
@@ -57,10 +57,10 @@ userSchema.methods.isPasswordCorrect = async function(password){
 userSchema.methods.generateAccessToken = async function(){
     return await jwt.sign(
     {
-        _id = this._id,
-        email = this.email,
-        username = this.username,
-        fullName = this.fullName,
+        _id : this._id,
+        email : this.email,
+        username : this.username,
+        fullName : this.fullName,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
@@ -70,7 +70,7 @@ userSchema.methods.generateAccessToken = async function(){
 userSchema.methods.generateRefreshToken = async function(){
     return await jwt.sign(
     {
-        _id = this._id
+        _id : this._id
     },
     process.env.REFRESH_TOKEN_SECRET,
     {
