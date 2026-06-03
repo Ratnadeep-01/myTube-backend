@@ -1,17 +1,17 @@
-// require('dotenv').config({path : './env'})
-
-import dotenv from "dotenv";
+// require('dotenv').config({path : './.env'})
+import 'dotenv/config';
+// import dotenv from "dotenv";
+// dotenv.config({
+//     path : './.env' // change script in package.json
+// })
 import {connectDB} from "./db/index.js";
 import { app } from "./app.js";
 
-dotenv.config({
-    path : './.env' // change script in package.json
-})
 
 
 connectDB()
 .then(() => {
-    app.on("errror", (error) => {
+    app.on("error", (error) => {
         console.log("error" , error)
         throw(error)
     })

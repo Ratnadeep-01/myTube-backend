@@ -1,4 +1,4 @@
-import {asyncHandler} from '../utils/assyncHandler.js';
+import {asyncHandler} from '../utils/asyncHandler.js';
 import {ApiError} from "../utils/ApiError.js";
 import {User} from "../models/user.model.js"
 import {uploadCloudinary} from "../utils/cloudinary.js"
@@ -10,7 +10,7 @@ const registerUser = asyncHandler( async(req, res) => {
         throw new ApiError(400, "all fields are required");
     }
 
-    const userExist = User.findOne({
+    const userExist = await User.findOne({
         $or : [{email}, {username}]
     })
 
@@ -18,8 +18,8 @@ const registerUser = asyncHandler( async(req, res) => {
         throw new ApiError(409, "user already exits with this username or email");
     }
 
-    const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    const avatarLocalPath = req.files?.avatar?.[0]?.path;
+    const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
     
     if(!avatarLocalPath){
         throw new ApiError(405, "avatar image is not uploaded")
@@ -41,7 +41,7 @@ const registerUser = asyncHandler( async(req, res) => {
         username: username.toLowerCase()
     })
 
-    const createdUser =  await user.findById(user._id).select(
+    const createdUser =  await User.findById(user._id).select(
         "-password -refershToken"
     )
 
@@ -49,9 +49,9 @@ const registerUser = asyncHandler( async(req, res) => {
         throw new ApiError(500, "something went wrong while registeration")
     }
 
-    return res.status(201)(
-        new ApiResponse(200, createdUser, "registeration successful")
-    )
+    return res.status(201).json(
+        new ApiResponse(201, createdUser, "Registration successful")
+    );
     
 })
 
