@@ -5,6 +5,7 @@ import {uploadCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from '../utils/ApiResponse.js';
 import jwt from "jsonwebtoken";
 import fs from "fs";
+import { set } from 'mongoose';
 
 
 const generateAccessAndRefreshToken = async (userId) => {
@@ -190,4 +191,115 @@ const refreshAccessToken = asyncHandler(async(req, res) => {
     }
 })
 
-export {registerUser, loginUser, logoutUser, refreshAccessToken, generateAccessAndRefreshToken};
+const changePassword = asyncHandler(async(req,res) => {
+    const {currentPassword, newPassword, confirmNewPassword} = req.body;
+
+    if(!(currentPassword && newPassword && confirmNewPassword)){
+        throw new ApiError(400, "all fields are required");
+    }
+    if(newPassword !== confirmNewPassword){
+        throw new ApiError(400, "new password and confirm new password is not same");
+    }
+
+    const user = await User.findById(req.user._id);
+    const isCurrentPasswrdValid = await user.isPasswordCorrect(currentPassword);
+    if(!isCurrentPasswrdValid){
+        throw new ApiError(401, "current password is incorrect");
+    }
+
+    user.password= newPassword;
+    await user.save({valdidateBeforeSave: false});
+
+    return res.status(200).json(new ApiResponse(200, {}, "password changed successfully"));  
+})
+
+const forgotPassword = asyncHandler(async(req,res) => {
+    const {email} = req.body;
+
+    const user = await User.findOne({email});
+
+    if(!user){
+        throw new ApiError(404, "user does not exist");
+    }
+
+    // Here you would typically generate a reset token and send it to the user's email
+    // For now, we'll just return a success message
+
+    return res.status(200).json(new ApiResponse(200, {}, "password reset link sent to your email"));
+})
+
+const getCurrentUser = asyncHandler(async(req, res)=> {
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {user : req.user}, "current user fetched successfully"))
+})
+
+const updateUserProfile = asyncHandler(async(req, res) => {
+    const {fullName, username, email} = req.body;
+
+    if(!fullName && !username && !email){
+        throw new ApiError(400, "at least one field is required to update")
+    }
+
+    const user = await User.findById(
+        req.user._id,
+        {
+            $set : {
+                fullName,
+                username,
+                email
+            }
+        },
+        {new : true}
+        
+    ).select("-password -refreshToken")
+    return res.status(200).json(new ApiResponse(200, {user}, "user profile updated successfully"));
+})
+
+const updateUserAvatar= asyncHandler(async(req, res) => {
+    const avatarLocalPath = req.file?.path;
+    if(!avatarLocalPath) {
+        throw new ApiError(400, {}, "Avatar has been not uploaded")
+    }
+
+    const avatar = uploadCloudinary(avatarLocalPath)
+    if(!avatar.url){
+        throw new ApiError(400, {}, "error while uploading avatar");
+    }
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set : {
+                avatar : avatar.url
+            }
+        },
+        {new : true}
+    ).select("-password")
+
+    return res.status(200).json(new ApiResponse(200, {user}, "avatar uploaded successfully"))
+})
+
+const updateUserCoverImage= asyncHandler(async(req, res) => {
+    const coverImageLocalPath = req.file?.path;
+    if(!coverImageLocalPath) {
+        throw new ApiError(400, {}, "coverImage has been not uploaded")
+    }
+
+    const coverImage = uploadCloudinary(coverImageLocalPath)
+    if(!coverImage.url){
+        throw new ApiError(400, {}, "error while uploading coverImage");
+    }
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set : {
+                coverImage : coverImage.url
+            }
+        },
+        {new : true}
+    ).select("-password")
+
+    return res.status(200).json(new ApiResponse(200, {user}, "coverImage uploaded successfully"))
+})
+
+export {registerUser, loginUser, logoutUser, refreshAccessToken, generateAccessAndRefreshToken, changePassword, forgotPassword, getCurrentUser, updateUserProfile, updateUserAvatar, updateUserCoverImage};
