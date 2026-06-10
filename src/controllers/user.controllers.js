@@ -126,7 +126,10 @@ const loginUser = asyncHandler(async(req,res)=>{
         secure : true
     }
 
-    return res.status(200).cookie("accessToken", accessToken, options).cookie("refreshToken", refreshToken, options)
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
     .json(new ApiResponse(200, {user : loggedInUser, accessToken, refreshToken}, "user logged in successfully"))
 })
 
@@ -276,6 +279,17 @@ const updateUserAvatar= asyncHandler(async(req, res) => {
         {new : true}
     ).select("-password")
 
+    // delete old image from cloudinary
+    if(req.user.avatar){
+        try{
+            const publicId = req.user.avatar.split("/").pop().split(".")[0];
+            await uploadCloudinary.delete(publicId);
+        }
+        catch(error){
+            throw new ApiError(500, "error while deleting old avatar");
+        }
+    }
+    
     return res.status(200).json(new ApiResponse(200, {user}, "avatar uploaded successfully"))
 })
 
@@ -298,6 +312,16 @@ const updateUserCoverImage= asyncHandler(async(req, res) => {
         },
         {new : true}
     ).select("-password")
+
+    //delete saved cover image on cloudinary
+    try{
+        if(req.user.coverImage){
+            const publicId = req.user.coverImage.split("/").pop().split(".")[0];
+            await uploadCloudinary.delete(publicId);
+        }
+    } catch(error){
+        throw new ApiError(500, {}, "error while removing old cover image")
+    }
 
     return res.status(200).json(new ApiResponse(200, {user}, "coverImage uploaded successfully"))
 })
