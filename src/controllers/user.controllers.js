@@ -413,7 +413,7 @@ const getWatchHistory = asyncHandler(async(req,res) => {
                 from: "videos",
                 localField: "watchHistory",
                 foreignField:"_id",
-                as:"WatchHostory",
+                as:"watchHistory",
                 pipeline:[
                     {
                         $lookup:{
@@ -443,11 +443,16 @@ const getWatchHistory = asyncHandler(async(req,res) => {
             }
         }
     ])
+    if (!user?.length) {
+        throw new ApiError(404, "User not found");
+    }
+
+    const watchHistory = user[0]?.watchHistory || [];
 
     return res
     .status(200)
     .json(
-        new ApiResponse(200, user[0].watchHistory, "watchHistory fetched successfully")
+        new ApiResponse(200, watchHistory, "watchHistory fetched successfully")
     )
 })
 
