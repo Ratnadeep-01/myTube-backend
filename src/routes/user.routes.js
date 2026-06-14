@@ -3,7 +3,7 @@ import { loginUser, logoutUser, registerUser, refreshAccessToken, changePassword
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
-import { loginUserSchema } from "../../validators/auth.validator.js";
+import { createUserSchema, loginUserSchema } from "../validators/auth.validator.js";
 
 const router = Router();
 
@@ -18,6 +18,7 @@ router.route("/register").post(
             maxCount: 1 
         },
     ]),
+    validate(createUserSchema), 
     registerUser
 );
 
