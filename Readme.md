@@ -1,79 +1,139 @@
-# Videotube Backend
+# myTube-backend
 
-Simple backend for a Videotube-like application (user registration, auth, profile, uploads).
+Backend API for a lightweight video-sharing platform (myTube). This project provides user authentication, media uploads, channels, playlists, likes, comments, subscriptions, and basic dashboard endpoints — all wired to MongoDB and Cloudinary for media storage.
 
-**Quick Start**
+**Project goal:** provide a modular, production-ready Express backend that powers a simple YouTube-like application and exposes RESTful endpoints for a frontend client.
 
-- **Install dependencies:**
+**Quick links:** server entry: [src/index.js](src/index.js#L1), app setup: [src/app.js](src/app.js#L1)
+
+## Key Features
+- **User authentication:** registration, login, logout, refresh tokens, password change, profile updates.
+- **Media uploads:** multipart uploads with `multer` and Cloudinary integration for avatars, cover images, and video thumbnails.
+- **Video management:** create, update, fetch, and list videos with pagination and basic metadata.
+- **Interactions:** likes, comments, playlists, and subscriptions.
+- **Dashboard & analytics:** endpoints for user-specific dashboards and basic aggregates.
+- **Validation & error handling:** request validation (Zod), centralized error responses (`ApiError`/`ApiResponse`).
+
+## Tech Stack
+- **Language:** JavaScript (ES Modules)
+- **Runtime & framework:** Node.js, Express 5
+- **Database:** MongoDB (Mongoose)
+- **Authentication:** JSON Web Tokens (`jsonwebtoken`), cookies
+- **File uploads & storage:** `multer` (local temp storage) + `cloudinary` for persistent media
+- **Validation:** `zod`
+- **Utilities & libs:** `bcrypt`, `cors`, `cookie-parser`, `dotenv`, `mongoose-aggregate-paginate-v2`
+- **Dev tools:** `nodemon`, `prettier`
+
+## Prerequisites
+- Node.js 18+ installed
+- npm (bundled with Node) or yarn
+- A running MongoDB instance (Atlas or local)
+- (Optional) Cloudinary account for image/video storage
+
+## Installation & Setup
+1. Clone the repository
+
+```bash
+git clone <your-repo-url>
+cd myTube-backend
+```
+
+2. Install dependencies
 
 ```bash
 npm install
 ```
 
-- **Create a `.env` file** with required environment variables (see below).
+3. Create a `.env` file in the project root with the required variables (example below):
 
-- **Run in development:**
+```env
+# Server
+PORT=8000
+
+# MongoDB
+MONGODB_URI=mongodb://localhost:27017
+DB_NAME=videotube
+
+# JWT
+ACCESS_TOKEN_SECRET=your_access_secret
+REFRESH_TOKEN_SECRET=your_refresh_secret
+ACCESS_TOKEN_EXPIRY=15m
+REFRESH_TOKEN_EXPIRY=7d
+
+# Cloudinary (optional)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# CORS
+CORS_ORIGIN=http://localhost:3000
+```
+
+4. (Optional) Create `public/temp` directory for Multer temporary uploads if not already present.
+
+## How to Run
+- Development (auto-reload):
 
 ```bash
 npm run dev
 ```
 
-The server entrypoint is [src/index.js](src/index.js#L1) which loads the Express app in [src/app.js](src/app.js#L1).
-
-**Environment Variables**
-
-- **`PORT`**: optional, default 8000
-- **`MONGODB_URI`**: MongoDB connection URI (without the DB name)
-- **`DB_NAME`**: optional DB name (defaults to `videotube`)
-- **`ACCESS_TOKEN_SECRET`**, **`REFRESH_TOKEN_SECRET`**: JWT secrets
-- **`ACCESS_TOKEN_EXPIRY`**, **`REFRESH_TOKEN_EXPIRY`**: token expiry values (e.g. `15m`, `7d`)
-- **`CLOUDINARY_CLOUD_NAME`**, **`CLOUDINARY_API_KEY`**, **`CLOUDINARY_API_SECRET`**: Cloudinary credentials for image uploads
-- **`CORS_ORIGIN`**: allowed origin for CORS
-
-**Available Scripts**
-
-- `npm run dev` — start development server with `nodemon` (entry: `src/index.js`)
-
-**API (Users)**
-
-Base path: `/api/v1/users`
-
-- `POST /register` — register a new user (multipart form-data). Fields: `username`, `email`, `password`, `fullName` + files `avatar` (required) and `coverImage` (optional). See [src/routes/user.routes.js](src/routes/user.routes.js#L1).
-- `POST /login` — login with `username` or `email` and `password`. Returns cookies: `accessToken`, `refreshToken`.
-- `POST /logout` — protected; clears tokens (requires auth).
-- `GET /refresh-token` — exchange refresh token for new access token.
-- `POST /change-password` — protected; change current password.
-- `GET /current-user` — protected; get current user profile.
-- `PATCH /update-profile` — protected; update profile fields.
-- `PATCH /update-avatar` — protected; multipart form, single file field `avatar`.
-- `PATCH /update-cover-image` — protected; multipart form, single file field `coverImage`.
-- `GET /c/:username` — protected; get user channel/profile by username.
-- `GET /history` — protected; get watch history.
-
-Key implementation files:
-
-- [src/models/user.model.js](src/models/user.model.js#L1) — Mongoose `User` schema, password hashing, token helpers.
-- [src/controllers/user.controllers.js](src/controllers/user.controllers.js#L1) — handlers for registration, login, tokens, profile.
-- [src/utils/cloudinary.js](src/utils/cloudinary.js#L1) — Cloudinary upload helper (removes temp files after upload).
-- [src/middlewares/multer.middleware.js](src/middlewares/multer.middleware.js#L1) — multer setup; temporary uploads saved under `public/temp`.
-- [src/db/index.js](src/db/index.js#L1) — MongoDB connection helper.
-
-**Notes & Tips**
-
-- In development, cookies are set `secure: true` in code; for local HTTP testing you may need to set `secure: false` in cookie options inside [src/controllers/user.controllers.js](src/controllers/user.controllers.js#L1).
-- Multer stores uploaded files under `public/temp` and `cloudinary` uploads remove the local file on success.
-- The global error handler in [src/app.js](src/app.js#L1) returns errors as a JSON `ApiResponse`/`ApiError` shape.
-
-**Testing the API**
-
-Use Postman or curl to test endpoints. Example: login
+- Production (example):
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/users/login \
-	-H "Content-Type: application/json" \
-	-d '{"username":"alice","password":"secret"}'
+node src/index.js
+# or use a process manager like pm2
 ```
 
-**License & Author**
+The API will start on the `PORT` from your `.env` (default `8000`).
 
-Author: Ratnadeep Kumar
+## Project Structure
+Top-level layout with important files and folders:
+
+```
+.
+├─ package.json
+├─ Readme.md
+├─ src/
+│  ├─ index.js                # server bootstrap (entrypoint)
+│  ├─ app.js                  # express app + middleware
+│  ├─ controllers/
+│  │  ├─ user.controllers.js
+│  │  ├─ video.controller.js
+│  │  └─ ...
+│  ├─ routes/
+│  │  └─ (user, video, comment, like, playlist, subscription, dashboard routes)
+│  ├─ models/                 # Mongoose models
+│  ├─ middlewares/            # auth, multer, validation
+│  └─ utils/                  # ApiResponse, ApiError, cloudinary helper
+├─ public/
+│  └─ temp/                   # multer temp storage
+└─ db/
+   └─ index.js                # mongodb connection helper
+```
+
+## Key Files
+- App bootstrap: [src/index.js](src/index.js#L1)
+- Express app & middleware: [src/app.js](src/app.js#L1)
+- Database helper: [db/index.js](db/index.js#L1)
+- User flows: [src/controllers/user.controllers.js](src/controllers/user.controllers.js#L1)
+- Upload helper: [src/utils/cloudinary.js](src/utils/cloudinary.js#L1)
+
+## Environment & Development Notes
+- Multer writes temporary files to `public/temp`; Cloudinary helper deletes temp files after upload.
+- For local testing with HTTP (not HTTPS), ensure cookie options `secure` are set appropriately in `user.controllers`.
+- Validation uses `zod` schemas located near route handlers (see `validators/`).
+
+## Contributing
+- Fork the repo, create a feature branch, and submit a PR. Keep changes focused and add tests where applicable.
+
+## Author
+- Ratnadeep Kumar
+
+---
+If you'd like, I can also:
+- add a sample `.env.example` file
+- generate API endpoint documentation (OpenAPI/Swagger)
+- add Postman collection examples
+
+Let me know which you'd prefer next.
