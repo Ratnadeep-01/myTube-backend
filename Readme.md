@@ -132,8 +132,5 @@ Top-level layout with important files and folders:
 
 ---
 If you'd like, I can also:
-- add a sample `.env.example` file
 - generate API endpoint documentation (OpenAPI/Swagger)
-- add Postman collection examples
 
-Let me know which you'd prefer next.
