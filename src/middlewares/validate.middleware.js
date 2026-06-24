@@ -1,10 +1,21 @@
 import { ApiError } from "../utils/ApiError.js";
+import fs from "fs";
 
 export const validate = (schema) => async (req, res, next) => {
     try {
         await schema.parseAsync(req.body);
         next(); 
     } catch (error) {
+        if (req.file) {
+            if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        }
+        if (req.files) {
+            Object.keys(req.files).forEach((key) => {
+                req.files[key].forEach((file) => {
+                    if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+                });
+            });
+        }
         // 1. Zod uses .issues for unions/alternatives. Fallback to .errors 🌟
         const rawErrors = error.issues || error.errors || [];
         
