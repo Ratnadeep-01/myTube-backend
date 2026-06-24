@@ -11,12 +11,12 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     if (!video) {
         throw new ApiError(404, "Video not found")
     }
-    const like = await Like.findOne({ video: videoId, user: req.user._id })
+    const like = await Like.findOne({ video: videoId, likedBy: req.user._id })
     if (like) {
-        await Like.deleteOne({ video: videoId, user: req.user._id })
+        await Like.deleteOne({ video: videoId, likedBy: req.user._id })
         return res.status(200).json(new ApiResponse(200, { liked: false }, "Like removed successfully"))
     } else {
-        await Like.create({ video: videoId, user: req.user._id })
+        await Like.create({ video: videoId, likedBy: req.user._id })
         return res.status(200).json(new ApiResponse(200, { liked: true }, "Like added successfully"))
     }
 
@@ -29,12 +29,12 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     if (!comment) {
         throw new ApiError(404, "Comment not found")
     }
-    const like = await Like.findOne({ comment: commentId, user: req.user._id })
+    const like = await Like.findOne({ comment: commentId, likedBy: req.user._id })
     if (like) {
-        await Like.deleteOne({ comment: commentId, user: req.user._id })
+        await Like.deleteOne({ comment: commentId, likedBy: req.user._id })
         return res.status(200).json(new ApiResponse(200, { liked: false }, "Like removed successfully"))
     } else {
-        await Like.create({ comment: commentId, user: req.user._id })
+        await Like.create({ comment: commentId, likedBy: req.user._id })
         return res.status(200).json(new ApiResponse(200, { liked: true }, "Like added successfully"))
     }
 
@@ -47,12 +47,12 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     if (!tweet) {
         throw new ApiError(404, "Tweet not found")
     }
-    const like = await Like.findOne({ tweet: tweetId, user: req.user._id })
+    const like = await Like.findOne({ tweet: tweetId, likedBy: req.user._id })
     if (like) {
-        await Like.deleteOne({ tweet: tweetId, user: req.user._id })
+        await Like.deleteOne({ tweet: tweetId, likedBy: req.user._id })
         return res.status(200).json(new ApiResponse(200, { liked: false }, "Like removed successfully"))
     } else {
-        await Like.create({ tweet: tweetId, user: req.user._id })
+        await Like.create({ tweet: tweetId, likedBy: req.user._id })
         return res.status(200).json(new ApiResponse(200, { liked: true }, "Like added successfully"))
     }
 
