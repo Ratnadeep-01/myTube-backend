@@ -30,16 +30,6 @@ export const createUserSchema = z.object({
         .min(1, { message: "Full name cannot be empty" })
         .max(100, { message: "Full name is too long" }),
 
-    avatar: z
-        .string({ required_error: "Avatar image URL is required" })
-        .url({ message: "Avatar must be a valid Cloudinary URL" }),
-
-    coverImage: z
-        .string()
-        .url({ message: "Cover image must be a valid URL" })
-        .optional()
-        .or(z.literal("")),
-
     password: passwordValidation,
 
     watchHistory: z
